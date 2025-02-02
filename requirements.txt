@@ -1,0 +1,4 @@
+python==3.9.19
+numpy>=1.19.0
+matplotlib>=3.9.1
+tqdm>=4.66.4
