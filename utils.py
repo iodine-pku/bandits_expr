@@ -1,7 +1,6 @@
 from typing import List, Tuple, Dict
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from tqdm import tqdm
 
 def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 30, seed: int = None) -> Dict:
@@ -26,6 +25,7 @@ def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 30, seed: int
     optimal_pulls = np.zeros((n_runs, n_rounds))
     optimal_pulls_percent = np.zeros((n_runs, n_rounds)) # percentage of optimal pulls until round t
     optimal_arm = bandit.optimal_arm
+
     
     for run in tqdm(range(n_runs)):
         np.random.seed(seed + run)
@@ -82,10 +82,10 @@ def plot_results(results_list: List[Dict], labels: List[str], title: str = "Band
                         alpha=0.2, color=color)
         
         # Plot optimal arm pull percentage
-        ax2.plot(t, results['optimal_pull_percent'], label=label, color=color)
+        ax2.plot(t, results['optimal_pull_percent_mean'], label=label, color=color)
         ax2.fill_between(t,
-                        results['optimal_pull_percent'] - results['optimal_pull_percent_std'],
-                        results['optimal_pull_percent'] + results['optimal_pull_percent_std'],
+                        results['optimal_pull_percent_mean'] - results['optimal_pull_percent_std'],
+                        results['optimal_pull_percent_mean'] + results['optimal_pull_percent_std'],
                         alpha=0.2, color=color)
     
     ax1.set_title('Cumulative Regret')
@@ -101,3 +101,56 @@ def plot_results(results_list: List[Dict], labels: List[str], title: str = "Band
     plt.suptitle(title)
     plt.tight_layout()
     return fig
+
+def run_config_group(config: Dict) -> Dict:
+    """Run experiments for a single group of config."""
+    from bandits import GaussianArm, BernoulliArm  ,StochasticBandit
+    from algorithms import EpsilonGreedy, UCB1, DecayingEpsilonGreedy, ETE
+    
+    # Map algorithm names to classes
+    algorithm_map = {
+        "EpsilonGreedy": EpsilonGreedy,
+        "UCB1": UCB1,
+        "DecayingEpsilonGreedy": DecayingEpsilonGreedy,
+        "ETE": ETE
+    }
+    
+    # Create bandit arms based on config
+    arms = []
+    for arm_params in config["arms_config"]["params"]:
+        if config["arms_config"]["type"] == "gaussian":
+            arms.append(GaussianArm(**arm_params))
+        elif config["arms_config"]["type"] == "bernoulli":
+            arms.append(BernoulliArm(**arm_params))
+        else:
+            raise ValueError(f"Invalid arm type: {config['arms_config']['type']}")
+        
+    bandit = StochasticBandit(arms)
+    group_results = []
+    
+    for alg_config in config["algorithms_config"]:
+        algorithm = algorithm_map[alg_config["name"]](
+            n_arms=len(arms),
+            **alg_config["params"]
+        )
+        result = run_experiment(
+            bandit, 
+            algorithm, 
+            n_rounds=config["n_rounds"],
+            seed=config["seed"]
+        )
+        group_results.append(result)
+        
+    return {
+        'results': group_results,
+        'labels': [f"{alg['name']}({alg['params']})" for alg in config["algorithms_config"]],
+        'title': config["name"]
+    }
+
+def plot_config_group(group_name: str, config: Dict):
+    """Run and plot experiments for a single group of config."""
+    results = run_config_group(config)
+    fig = plot_results(results['results'], results['labels'], results['title'])
+    fig.suptitle(group_name)
+    plt.savefig(f"plots/{group_name}.pdf")
+   
