@@ -6,7 +6,7 @@ from tqdm import tqdm
 from bandits import GaussianArm, BernoulliArm  ,StochasticBandit
 from algorithms import EpsilonGreedy, UCB1, DecayingEpsilonGreedy, ETE
 
-def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 30, seed: int = None) -> Dict:
+def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 50, seed: int = None) -> Dict:
     """
     Run a bandit experiment multiple times and collect statistics.
     
