@@ -45,17 +45,17 @@ class StochasticBandit:
             arms: List of BanditArm objects
         """
         self.arms = arms
-        self.K = len(arms)
+        self.n_arms = len(arms)
        
         # Find optimal arm
         self.optimal_reward = max(arm.get_expected_reward() for arm in arms)
-        self.optimal_arm = max(range(self.K), 
+        self.optimal_arm = max(range(self.n_arms), 
                              key=lambda i: arms[i].get_expected_reward())
     
     def pull(self, arm_index: int) -> float:
         """Pull the specified arm and return reward."""
-        if not 0 <= arm_index < self.K:
-            raise ValueError(f"Arm index must be between 0 and {self.K-1}")
+        if not 0 <= arm_index < self.n_arms:
+            raise ValueError(f"Arm index must be between 0 and {self.n_arms-1}")
         return self.arms[arm_index].pull()
     
     def get_optimal_arm(self) -> int:

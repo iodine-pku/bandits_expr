@@ -1,6 +1,6 @@
+from __future__ import division
 from abc import ABC, abstractmethod
 import numpy as np
-from __future__ import division
 
 class BanditAlgorithm(ABC):
     """Abstract base class for bandit algorithms."""

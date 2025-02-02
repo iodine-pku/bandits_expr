@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+from bandits import GaussianArm, BernoulliArm  ,StochasticBandit
+from algorithms import EpsilonGreedy, UCB1, DecayingEpsilonGreedy, ETE
+
 def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 30, seed: int = None) -> Dict:
     """
     Run a bandit experiment multiple times and collect statistics.
@@ -104,8 +107,6 @@ def plot_results(results_list: List[Dict], labels: List[str], title: str = "Band
 
 def run_config_group(config: Dict) -> Dict:
     """Run experiments for a single group of config."""
-    from bandits import GaussianArm, BernoulliArm  ,StochasticBandit
-    from algorithms import EpsilonGreedy, UCB1, DecayingEpsilonGreedy, ETE
     
     # Map algorithm names to classes
     algorithm_map = {

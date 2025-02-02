@@ -2,6 +2,7 @@ from configs import CONFIGS
 from utils import *
 import matplotlib.pyplot as plt
 import os
+import sys
 
 def main():
     if not os.path.exists('plots'):
