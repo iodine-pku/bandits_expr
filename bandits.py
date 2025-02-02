@@ -37,19 +37,16 @@ class GaussianArm(BanditArm):
 
 class StochasticBandit:
     """Multi-armed bandit with stochastic arms."""
-    def __init__(self, arms: List[BanditArm], seed: Optional[int] = None):
+    def __init__(self, arms: List[BanditArm]):
         """
         Initialize bandit with a list of arms.
         
         Args:
             arms: List of BanditArm objects
-            seed: Random seed for reproducibility
         """
         self.arms = arms
         self.K = len(arms)
-        if seed is not None:
-            np.random.seed(seed)
-            
+       
         # Find optimal arm
         self.optimal_reward = max(arm.get_expected_reward() for arm in arms)
         self.optimal_arm = max(range(self.K), 
