@@ -23,6 +23,9 @@ def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 30, seed: int
     cumulative_rewards = np.zeros((n_runs, n_rounds))
     cumulative_regret = np.zeros((n_runs, n_rounds))
     arm_pulls = np.zeros((n_runs, bandit.n_arms))
+    optimal_pulls = np.zeros((n_runs, n_rounds))
+    optimal_pulls_percent = np.zeros((n_runs, n_rounds)) # percentage of optimal pulls until round t
+    optimal_arm = bandit.optimal_arm
     
     for run in tqdm(range(n_runs)):
         np.random.seed(seed + run)
@@ -45,14 +48,19 @@ def run_experiment(bandit, algorithm, n_rounds: int, n_runs: int = 30, seed: int
                 optimal_reward * (t + 1) - cumulative_rewards[run, t]
             )
             arm_pulls[run, arm] += 1
-    
+            optimal_pulls[run, t] = 1 if arm == optimal_arm else 0
+            optimal_pulls_percent[run, t] = np.mean(optimal_pulls[run, :t+1])
+
     results = {
         'avg_reward': np.mean(cumulative_rewards, axis=0),
         'std_reward': np.std(cumulative_rewards, axis=0),
         'avg_regret': np.mean(cumulative_regret, axis=0),
         'std_regret': np.std(cumulative_regret, axis=0),
         'avg_arm_pulls': np.mean(arm_pulls, axis=0),
-        'std_arm_pulls': np.std(arm_pulls, axis=0)
+        'std_arm_pulls': np.std(arm_pulls, axis=0),
+        'optimal_pull_percent_mean': np.mean(optimal_pulls_percent, axis=0),
+        'optimal_pull_percent_std': np.std(optimal_pulls_percent, axis=0)
+
     }
     
     return results
@@ -73,18 +81,21 @@ def plot_results(results_list: List[Dict], labels: List[str], title: str = "Band
                         results['avg_regret'] + results['std_regret'],
                         alpha=0.2, color=color)
         
-        # Plot average arm pulls
-        ax2.bar(np.arange(len(results['avg_arm_pulls'])), results['avg_arm_pulls'],
-               width=0.4, label=label, color=color, alpha=0.8)
+        # Plot optimal arm pull percentage
+        ax2.plot(t, results['optimal_pull_percent'], label=label, color=color)
+        ax2.fill_between(t,
+                        results['optimal_pull_percent'] - results['optimal_pull_percent_std'],
+                        results['optimal_pull_percent'] + results['optimal_pull_percent_std'],
+                        alpha=0.2, color=color)
     
     ax1.set_title('Cumulative Regret')
     ax1.set_xlabel('Round')
     ax1.set_ylabel('Regret')
     ax1.legend()
     
-    ax2.set_title('Average Arm Pulls')
-    ax2.set_xlabel('Arm')
-    ax2.set_ylabel('Number of Pulls')
+    ax2.set_title('Optimal Arm Pull Percentage')
+    ax2.set_xlabel('Round')
+    ax2.set_ylabel('Ratio of Optimal Arm Pulled')
     ax2.legend()
     
     plt.suptitle(title)
